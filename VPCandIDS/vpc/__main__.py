@@ -1,46 +1,19 @@
 import boto3
-from . import subnets
-from . import gateways
-from . import routes
-import logging
-from botocore.exceptions import ClientError
-log = logging.getLogger(__name__)
+import subnets
+import gateways
+import routes
+
+#from botocore.exceptions import ClientError
+#log = logging.getLogger(__name__)
  
-"""
-print("__main__.py!")
-
-
-ec2 = boto3.resource('ec2')
-
-try:
-    ec2.create_vpc(CidrBlock='10.0.0.0/16', DryRun=True)
-except ClientError as e:
-    if "DryRunOperation" not in str(e):
-        raise
-    log.info("VPC creation dryrun succeeded. Now processing real task...")
-#vpc = ec2.create_vpc(CidrBlock='10.0.0.0/16')
-#vpc_id = vpc.id
-vpc_id = 'vpc-0c1dee316e8c29bdd'
-
-
-try:
-    vpc.create_tags(Tags=[{"Key": "Name", "Value": "my_vpc"}], DryRun=True)
-except ClientError as e:
-    if "DryRunOperation" not in str(e):
-        raise
-    log.info("VPC creation dryrun succeeded. Now processing real task...")
-#vpc.create_tags(Tags=[{"Key": "Name", "Value": "my_vpc"}])
-"""
-
+ec2 = boto3.client('ec2')
+#Création du VPC
 vpc = subnets.create_custom_vpc('10.0.0.0/16','Name', 'myVPC')
 print("VCP créé")
 print(vpc, "\n")
 vpc_id = vpc["Vpc"]["VpcId"] 
-input()
-
 print("VPC ID")
 print(vpc_id, "\n")
-#vpc_id = 'vpc-0c1dee316e8c29bdd'
 
 
 
@@ -59,8 +32,8 @@ private_subnet_id = privateSubnet["Subnet"]["SubnetId"]
 
 
 #Create and attach Internet Gateway
-internet_gateway, gw_id = gateways.attach_gateway(vpc_id, "Name", "GW")
-print("Create and attach Internet Gateway Response")
+internet_gateway = gateways.create_internet_gateway(vpc_id, "Name", "Internet-GW")
+print("Create and attach Internet Gateway")
 print(internet_gateway, "\n")
 
 
@@ -70,26 +43,87 @@ print("Get Subnet ID for NAT Gateway")
 print(subnet_id_ng, "\n")
 
 #Create NAT Gateway
-nat_gateway = gateways.create_gateway_perso(subnet_id_ng, "Name", "EIP", "Name", "Nat-GW")
-log.info("Create NAT Gateway")
-log.debug(nat_gateway)
+nat_gateway = gateways.create_nat_gateway(subnet_id_ng, "Name", "EIP", "Name", "Nat-GW")
+print("Create NAT Gateway")
+print(nat_gateway, "\n")
 
 #Get Internet Gateway ID
-internet_gateway_id = internet_gateway["InternetGateway"]
-log.info("Get Internet Gateway ID")
-log.debug(internet_gateway_id)
+internet_gateway_id = internet_gateway["InternetGateway"]["InternetGatewayId"]
+print("Get Internet Gateway ID")
+print(internet_gateway_id,"\n")
 
 #Create Route table and Route to Internet Gateway
-public_routage_gt = routes.create_public_route(vpc_id, "0.0.0.0/0", internet_gateway_id, "Name", "Pub-RT")
-print("Create Route Table for Internet Gateway Response")
-print(public_routage_gt, "\n")
+public_routage_gt = routes.create_public_route(vpc_id, "0.0.0.0/0", internet_gateway_id, "Name", "Public-Route")
+print("Create Route Table for Internet Gateway")
+print(nat_gateway, "\n")
 
 #Get NAT Gateway ID
-nat_gateway_id = nat_gateway["NatGateway"]["NatGatewayId"]
+nat_gateway_id = nat_gateway['NatGateway']['NatGatewayId']
 print("Get NAT Gateway ID")
 print(nat_gateway_id, "\n")
 
-###TODO check NAT activation status
+print("NAT setting up......")
+
+ng_available = False
+
+#Check if Nat Gateway is Active then create route
+while ng_available == False:
+    #Get NAT Gateway State
+    get_nat_gw= ec2.describe_nat_gateways(
+        Filter=[
+            {
+                'Name': 'nat-gateway-id',
+                'Values': [
+                    nat_gateway_id,
+                ],
+            },
+        ],
+    )
+
+    nat_gatway_info = get_nat_gw['NatGateways'][0]
+    ng_state = nat_gatway_info['State']
+
+    if ng_state == "available":
+        print("NAT Gateway est up !" "\n")
+
+        #Create Private Route Table and Route to NAT Gateway
+        response_private_rt = routes.create_private_route(vpc_id, "0.0.0.0/0","Name", "Private-Route")
+        print("Create Route Table for NAT Gateway ")
+        print(nat_gateway, "\n")
+
+        ng_available = True
+
+
+
+
+#Table de routage de l'IP publique
+public_route_id = public_routage_gt["RouteTable"]["RouteTableId"]
+print("Get public route table")
+print(public_route_id, "\n")
+
+#Association du subnet public avec la table de routage publique
+association_public_subnet_routage = routes.association_tableRoutage_subnet(public_route_id, public_subnet_id)
+print("Association du subnet public à la table de routage publique")
+print(association_public_subnet_routage, "\n")
+
+#Table de routage du subnet privé
+private_routage = routes.create_private_route(vpc_id, "0.0.0.0/0", "Name", "Private-Route")
+print("Table de routage subnet privé")
+print(private_routage, "\n")
+
+#Table de routage subnet privé
+private_route_id = private_routage["RouteTable"]["RouteTableId"]
+print("Get Public Route Table ID")
+print(private_route_id, "\n")
+
+#Association du subnet privé avec la table de routage privée
+association_private_subnet_routage = routes.association_tableRoutage_subnet(private_route_id, private_subnet_id)
+print("Associate Private Subnet 1 to Private Route table Response")
+print(association_private_subnet_routage, "\n")
+
+print("All done")
+
+
 
 
 
