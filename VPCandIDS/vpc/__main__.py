@@ -3,6 +3,7 @@ from . import subnets
 from . import gateways
 from . import routes
 from . import acls
+from . import security_groups
 
 
 #from botocore.exceptions import ClientError
@@ -123,11 +124,14 @@ association_private_subnet_routage = routes.association_tableRoutage_subnet(priv
 print("Associate Private Subnet 1 to Private Route table Response")
 print(association_private_subnet_routage, "\n")
 
-#création et configuration de la NACL
-create_and_configure_nacl('vpc-id', 'public-subnet-id', 'private-subnet-id')
-
 #NACLS
 nacl = acls.create_and_configure_nacl(ec2,vpc_id, public_subnet_id, private_subnet_id,'us-east-1')
+print(nacl)
+
+#Groupes de sécurité
+web_sg_id, db_sg_id = security_groups.create_security_groups(vpc_id)
+print(f"Security Group for Web Server: {web_sg_id}")
+print(f"Security Group for DB Server: {db_sg_id}")
 
 print("All done")
 
