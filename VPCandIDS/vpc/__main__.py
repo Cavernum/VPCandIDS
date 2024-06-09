@@ -1,7 +1,9 @@
-import boto3
-import subnets
-import gateways
-import routes
+from . import boto3
+from . import subnets
+from . import gateways
+from . import routes
+from . import acls
+
 
 #from botocore.exceptions import ClientError
 #log = logging.getLogger(__name__)
@@ -120,6 +122,12 @@ print(private_route_id, "\n")
 association_private_subnet_routage = routes.association_tableRoutage_subnet(private_route_id, private_subnet_id)
 print("Associate Private Subnet 1 to Private Route table Response")
 print(association_private_subnet_routage, "\n")
+
+#création et configuration de la NACL
+create_and_configure_nacl('vpc-id', 'public-subnet-id', 'private-subnet-id')
+
+#NACLS
+nacl = acls.create_and_configure_nacl(ec2,vpc_id, public_subnet_id, private_subnet_id,'us-east-1')
 
 print("All done")
 
