@@ -50,7 +50,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
         RuleAction='allow',
         Egress=False,
         CidrBlock='0.0.0.0/0',
-        PortRange={'From': 80, 'To': 80}
+        PortRange={'From': 0, 'To': 65535}
     )
     ec2_client.create_network_acl_entry(
         NetworkAclId=nacl_id,
@@ -59,7 +59,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
         RuleAction='allow',
         Egress=False,
         CidrBlock='0.0.0.0/0',
-        PortRange={'From': 443, 'To': 443}
+        PortRange={'From': 0, 'To': 65535}
     )
     ec2_client.create_network_acl_entry(
         NetworkAclId=nacl_id,
@@ -68,7 +68,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
         RuleAction='allow',
         Egress=True,
         CidrBlock='10.0.2.0/24',
-        PortRange={'From': 3306, 'To': 3306}
+        PortRange={'From': 0, 'To': 65535}
     )
 
 # Créer les règles pour le sous-réseau privé (Serveur MariaDB)
@@ -79,7 +79,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
         RuleAction='allow',
         Egress=False,
         CidrBlock='10.0.1.0/24',
-        PortRange={'From': 3306, 'To': 3306}
+        PortRange={'From': 0, 'To': 65535}
     )
     ec2_client.create_network_acl_entry(
         NetworkAclId=nacl_id,
@@ -88,7 +88,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
         RuleAction='allow',
         Egress=True,
         CidrBlock='10.0.1.0/24',
-        PortRange={'From': 1024, 'To': 65535}
+        PortRange={'From': 0, 'To': 65535}
     )
     
     return nacl_id
