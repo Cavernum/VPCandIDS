@@ -34,13 +34,12 @@ def create_ubuntu_instance(name: str, subnet_id: str, security_groups_ids: list[
             MinCount=1,
             MaxCount=1,
             UserData=user_data,
-            DryRun=True
         )
     time.sleep(1)  # Waiting a bit after instance creation
 
     return instance
 
-def download_key(file_name,path):
+def download_key(file_name,path = "."):
     path = os.path.realpath(path)
     ec2 = boto3.client("ec2")
     # Nom de la nouvelle paire de clés
@@ -53,6 +52,8 @@ def download_key(file_name,path):
             # Supprimer la paire de clés existante
             ec2.delete_key_pair(KeyName=key_pair_name)
             log.info(f"La paire de clés existante '{key_pair_name}' a été supprimée.")
+            os.chmod(f'{os.path.join(path, key_pair_name)}.pem', 0o660)
+            os.remove(os.path.join(path, f"{key_pair_name}.pem"))
     except ec2.exceptions.ClientError as e:
         if 'InvalidKeyPair.NotFound' in str(e):
             log.info(f"Aucune paire de clés existante trouvée avec le nom '{key_pair_name}'.")
