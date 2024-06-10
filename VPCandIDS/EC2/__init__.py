@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 
 ec2 = boto3.client("ec2")
 
-def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypair_name: str, user_data: str) -> ReservationResponseTypeDef:
+def create_ubuntu_instance(name, subnet_id: str, security_groups_ids: list[str], keypair_name: str, user_data: str) -> ReservationResponseTypeDef:
     try:
         ec2.run_instances(
                 ImageId="ami-04b70fa74e45c3917", # ubuntu
@@ -20,6 +20,16 @@ def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypa
                         "DeviceIndex": 0,
                         "SubnetId": subnet_id,
                         "Groups": security_groups_ids,
+                    }
+                ],
+                TagSpecifications=[
+                    {
+                        "Tags": [
+                            {
+                                "Key": "string",
+                                "Value" : name,
+                            }
+                        ]
                     }
                 ],
                 KeyName=keypair_name,
