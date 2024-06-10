@@ -109,6 +109,20 @@ with OurStatus("Creating gateways"):
     log.debug(nat_gateway)
 
 
+with OurStatus("Waiting for NAT Gateway to attach"):
+    waiter = ec2.get_waiter('nat_gateway_available')
+
+    waiter.wait(
+        NatGatewayIds=[nat_gateway_id],
+        WaiterConfig={
+            "Delay": 5,
+            "MaxAttempts": 30
+        }
+    )
+    log.info("NAT gateway is now attached, continuing...")
+    log.debug(f"NAT Gateway ID: {nat_gateway_id}")
+
+
 with OurStatus("Creating routes"):
     public_route = routes.create_public_route(
         vpc_id,
@@ -127,20 +141,6 @@ with OurStatus("Creating routes"):
     )
     log.info("Created route 0.0.0.0/0 for private subnet.")
     log.debug(private_route)
-
-
-with OurStatus("Waiting for NAT Gateway to attach"):
-    waiter = ec2.get_waiter('nat_gateway_available')
-
-    waiter.wait(
-        NatGatewayIds=[nat_gateway_id],
-        WaiterConfig={
-            "Delay": 5,
-            "MaxAttempts": 30
-        }
-    )
-    log.info("NAT gateway is now attached, continuing...")
-    log.debug(f"NAT Gateway ID: {nat_gateway_id}")
 
 
 with OurStatus("Associating routing tables to subnets"):
