@@ -228,7 +228,8 @@ with OurStatus("Creating DVWA instance"):
         public_subnet_id,
         [web_sg_id],
         "dvwa",
-        script_dvwa
+        script_dvwa,
+        public_ip=True,
     )
     log.info("Created DVWA instance.")
     log.debug(dvwa)
