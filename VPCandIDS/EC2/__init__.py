@@ -8,7 +8,7 @@ log = logging.getLogger(__name__)
 
 ec2 = boto3.client("ec2")
 
-<<<<<<< HEAD
+
 def create_ubuntu_instance(name, subnet_id: str, security_groups_ids: list[str], keypair_name: str, user_data: str) -> ReservationResponseTypeDef:
     try:
         ec2.run_instances(
@@ -45,12 +45,6 @@ def create_ubuntu_instance(name, subnet_id: str, security_groups_ids: list[str],
 
     instance = ec2.run_instances(
             ImageId="ami-04b70fa74e45c3917", # ubuntu
-=======
-def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypair_name: str, user_data: str, *, public_ip=False):
-    try:
-        ec2.run_instances(
-            ImageId="ami-04b70fa74e45c3917", 
->>>>>>> 7abc558 (No public IP for db server)
             InstanceType="t3.micro",
             NetworkInterfaces=[
                 {
@@ -92,8 +86,6 @@ def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypa
 
     return instance
 
-<<<<<<< HEAD
-
 def download_key(file_name,path):
     path = os.path.realpath(path)
     ec2 = boto3.client("ec2")
@@ -114,14 +106,8 @@ def download_key(file_name,path):
             log.info(f"Erreur lors de la vérification de la paire de clés: {e}")
             return
     # Créer une nouvelle paire de clés
-=======
-def download_key(instance):
-    ec2 = instance
-    key_pair_name = 'key'
->>>>>>> 7abc558 (No public IP for db server)
     response = ec2.create_key_pair(KeyName=key_pair_name)
     key_material = response['KeyMaterial']
-<<<<<<< HEAD
     # Sauvegarder la clé privée dans un fichier .pem
     with open(os.path.join(path, f"{key_pair_name}.pem"), 'w') as file:
         file.write(key_material)
@@ -138,12 +124,3 @@ def search_key(file_name):
             return e
     log.warn(f"La paire de clé {file_name} n'a pas été trouvée.")
 
-    
-=======
-
-    with open(f'{key_pair_name}.pem', 'w') as file:
-        file.write(key_material)
-
-    os.chmod(f'{key_pair_name}.pem', 0o400)
-    print(f"La nouvelle clé {key_pair_name}.pem a été créée.")
->>>>>>> 7abc558 (No public IP for db server)
