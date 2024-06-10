@@ -10,7 +10,7 @@ log = logging.getLogger(__name__)
 
 ec2 = boto3.client("ec2")
 
-def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypair_name: str) -> ReservationResponseTypeDef:
+def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypair_name: str, user_data: str) -> ReservationResponseTypeDef:
     try:
         ec2.run_instances(
                 ImageId="ami-04b70fa74e45c3917", # ubuntu
@@ -20,11 +20,13 @@ def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypa
                         "AssociatePublicIpAddress": True,
                         "DeviceIndex": 0,
                         "SubnetId": subnet_id,
+                        "Groups": security_groups_ids,
                     }
                 ],
                 KeyName=keypair_name,
                 MinCount=1,
                 MaxCount=1,
+                UserData=user_data,
                 DryRun=True
                 )
     except ClientError as e:
@@ -40,17 +42,20 @@ def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypa
                     "AssociatePublicIpAddress": True,
                     "DeviceIndex": 0,
                     "SubnetId": subnet_id,
+                    "Groups": security_groups_ids,
                 }
             ],
             KeyName=keypair_name,
             MinCount=1,
             MaxCount=1,
+            UserData=user_data,
             )
+
+    time.sleep(1)
 
     return instance
 
 def install_dvwa(username, private_key, public_ip_address, ip_db):
-    time.sleep(1)
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -75,7 +80,6 @@ def install_dvwa(username, private_key, public_ip_address, ip_db):
     ssh_client.close()
 
 def install_mariadb(username, private_key, public_ip_address):
-    time.sleep(1)
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -134,4 +138,3 @@ def download_key(instance):
     # Modifier les permissions du fichier pour des raisons de sécurité
     os.chmod(f'{key_pair_name}.pem', 0o400)
     print(f"La nouvelle clé {key_pair_name}.pem a été créée.")
-
