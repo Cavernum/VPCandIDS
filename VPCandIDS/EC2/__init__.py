@@ -2,6 +2,7 @@ import logging
 import time
 import paramiko
 import boto3
+import os
 from botocore.client import ClientError
 from mypy_boto3_ec2.type_defs import ReservationResponseTypeDef
 
@@ -111,3 +112,19 @@ def install_snort(username, private_key, public_ip_address):
     stdin, stdout, stderr = ssh_client.exec_command("tar -xzvf snort-2.9.15.1.tar.gz")
     stdin, stdout, stderr = ssh_client.exec_command("cd snort-2.9.15.1")
     stdin, stdout, stderr = ssh_client.exec_command("./configure --enable-sourcefire && make && sudo make install")
+
+def download_key(instance):
+    ec2=instance
+    # Nom de la nouvelle paire de clés
+    key_pair_name = 'key'
+    # Créer une nouvelle paire de clés
+    response = ec2.create_key_pair(KeyName=key_pair_name)
+    # Récupérer la clé privée PEM
+    key_material = response['KeyMaterial']
+    # Sauvegarder la clé privée dans un fichier .pem
+    with open(f'{key_pair_name}.pem', 'w') as file:
+        file.write(key_material)
+    # Modifier les permissions du fichier pour des raisons de sécurité
+    os.chmod(f'{key_pair_name}.pem', 0o400)
+    print(f"La nouvelle clé {key_pair_name}.pem a été créée.")
+
