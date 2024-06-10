@@ -8,22 +8,22 @@ def create_security_groups(vpc_id):
         Description='Security group for web server',
         VpcId=vpc_id
     )
-    sg_web.authorize_egress(
-        IpPermissions=[
-            {
-                'IpProtocol': 'tcp',
-                'FromPort': 1,
-                'ToPort': 65000,
-                'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
-            },
-        ]
-    )
+    # sg_web.authorize_egress(
+    #     IpPermissions=[
+    #         {
+    #             'IpProtocol': 'all',
+    #             'FromPort': 0,
+    #             'ToPort': 65535,
+    #             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+    #         },
+    #     ]
+    # )
     sg_web.authorize_ingress(
         IpPermissions=[
             {
-                'IpProtocol': 'tcp',
-                'FromPort': 1,
-                'ToPort': 65000,
+                'IpProtocol': 'all',
+                'FromPort': 0,
+                'ToPort': 65535,
                 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
             },
             # {
@@ -46,23 +46,24 @@ def create_security_groups(vpc_id):
         Description='Security group for database server',
         VpcId=vpc_id
     )
-    sg_db.authorize_egress(
-        IpPermissions=[
-            {
-                'IpProtocol': 'tcp',
-                'FromPort': 1,
-                'ToPort': 65000,
-                'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
-            },
-        ]
-    )
+    # sg_db.authorize_egress(
+    #     IpPermissions=[
+    #         {
+    #             'IpProtocol': 'all',
+    #             'FromPort': 0,
+    #             'ToPort': 65535,
+    #             'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+    #         },
+    #     ]
+    # )
     sg_db.authorize_ingress(
         IpPermissions=[
             {
-                'IpProtocol': 'tcp',
-                'FromPort': 1,
-                'ToPort': 65000,
-                'UserIdGroupPairs': [{'GroupId': sg_web.group_id}]
+                'IpProtocol': 'all',
+                'FromPort': 0,
+                'ToPort': 65535,
+                'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                #'UserIdGroupPairs': [{'GroupId': sg_web.group_id}]
             },
             # {
             #     'IpProtocol': 'tcp',
