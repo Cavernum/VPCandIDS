@@ -65,6 +65,10 @@ def download_key(file_name,path = "."):
     # Récupérer la clé privée PEM
     key_material = response['KeyMaterial']
     # Sauvegarder la clé privée dans un fichier .pem
+    try:
+        os.chmod(f'{os.path.join(path, key_pair_name)}.pem', 0o660)
+    except Exception:
+        pass
     with open(os.path.join(path, f"{key_pair_name}.pem"), 'w') as file:
         file.write(key_material)
     # Modifier les permissions du fichier pour des raisons de sécurité
