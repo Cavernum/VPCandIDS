@@ -55,4 +55,22 @@ instance_id_dvwa = instance_dvwa["Instances"][0]["InstanceId"]
 instance_details_dvwa = ec2.describe_instances(InstanceIds=[instance_id_dvwa])["Reservations"][0]["Instances"][0]
 public_ip_address_dvwa = instance_details_dvwa["PublicIpAddress"]
 
-# Your subsequent logic here...
+instance_id = instance["Instances"][0]["InstanceId"]                                              # type: ignore
+instance = ec2.describe_instances(InstanceIds=[instance_id])["Reservations"][0]["Instances"][0]   # type: ignore
+public_ip_address = instance["PublicIpAddress"]                                                   # type: ignore
+
+
+script = """#!/bin/bash
+sudo apt update && sudo apt upgrade -y
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq oinkmaster snort snort-rules-default < /dev/null > /dev/null
+echo "url = http://rules.emergingthreats.net/open-nogpl/snort-2.9.0/emerging.rules.tar.gz" | sudo tee -a /etc/oinkmaster.conf
+sudo oinkmaster  -o /etc/snort/rules
+sudo /etc/init.d/snort start
+"""
+
+security_groups_ids = ["sg-08000ebd5c259b944"]
+instance = create_ubuntu_instance("Snort", subnet_id, security_groups_ids, keypair_name, script)
+
+instance_id = instance["Instances"][0]["InstanceId"]                                              # type: ignore
+instance = ec2.describe_instances(InstanceIds=[instance_id])["Reservations"][0]["Instances"][0]   # type: ignore
+public_ip_address = instance["PublicIpAddress"]                                                   # type: ignore
