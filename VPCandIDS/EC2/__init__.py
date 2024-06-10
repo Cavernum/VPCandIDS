@@ -1,6 +1,5 @@
 import logging
 import time
-import paramiko
 import boto3
 import os
 from botocore.client import ClientError
@@ -54,74 +53,6 @@ def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypa
     time.sleep(1)
 
     return instance
-
-def install_dvwa(username, private_key, public_ip_address, ip_db):
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    ssh_client.connect(hostname=public_ip_address, username=username, pkey=private_key)
-
-    commands = [
-        "sudo apt update",
-        "sudo apt install apache2 php php-mysql libapache2-mod-php git -y",
-        "cd /var/www/html && sudo git clone https://github.com/digininja/DVWA.git",
-        "sudo chown -R www-data:www-data /var/www/html/DVWA",
-        "sudo chmod -R 755 /var/www/html/DVWA",
-        "sudo cp /var/www/html/DVWA/config/config.inc.php.dist /var/www/html/DVWA/config/config.inc.php",
-        f"sudo sed -i 's/db_user = ''/db_user = 'dvwa_user'/g' /var/www/html/DVWA/config/config.inc.php",
-        f"sudo sed -i 's/db_password = ''/db_password = 'password_secure'/g' /var/www/html/DVWA/config/config.inc.php",
-        f"sudo sed -i 's/db_database = ''/db_database = 'dvwa'/g' /var/www/html/DVWA/config/config.inc.php",
-        f"sudo sed -i 's/db_server = ''/db_server = '{ip_db}'/g' /var/www/html/DVWA/config/config.inc.php",
-        "sudo systemctl restart apache2"
-    ]
-    for command in commands:
-        stdin, stdout, stderr = ssh_client.exec_command(command)
-
-    ssh_client.close()
-
-def install_mariadb(username, private_key, public_ip_address):
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    ssh_client.connect(hostname=public_ip_address, username=username, pkey=private_key)
-
-    commands = [
-        "sudo apt update",
-        "sudo apt install mariadb-server -y",
-        "sudo mysql -e \"CREATE DATABASE dvwa;\"",
-        "sudo mysql -e \"CREATE USER 'dvwa_user'@'%' IDENTIFIED BY 'password_secure';\"",
-        "sudo mysql -e \"GRANT ALL PRIVILEGES ON dvwa.* TO 'dvwa_user'@'%';\"",
-        "sudo mysql -e \"FLUSH PRIVILEGES;\""
-    ]
-    for command in commands:
-        ssh_client.exec_command(command)
-
-    ssh_client.close()
-
-def install_snort(username, private_key, public_ip_address):
-    time.sleep(1)
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    ssh_client.connect(hostname=public_ip_address, username=username, pkey=private_key)
-
-    commands = [
-        "sudo apt update && sudo apt upgrade -y",
-        "sudo apt install -y build-essential autotools-dev libdumbnet-dev libpcap-dev libpcre3-dev libdnet autoconf bison flex libtool",
-        "wget https://www.snort.org/downloads/snort/daq-2.0.7.tar.gz",
-        "tar -xzvf daq-2.0.7.tar.gz",
-        "cd daq-2.0.7",
-        "./configure && make && sudo make install",
-        "cd ..",
-        "wget https://www.snort.org/downloads/snort/snort-2.9.15.1.tar.gz",
-        "tar -xzvf snort-2.9.15.1.tar.gz",
-        "cd snort-2.9.15.1",
-        "./configure --enable-sourcefire && make && sudo make install"
-    ]   
-    for command in commands:
-        ssh_client.exec_command(command)
-
-    ssh_client.close()
 
 
 def download_key(instance):
