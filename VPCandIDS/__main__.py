@@ -171,7 +171,6 @@ with OurStatus("Creating NACLs"):
 with OurStatus("Creating security groups"):
     web_sg_id, db_sg_id = security_groups.create_security_groups(vpc_id)
 
-
 ################################################################################
 #  _____ ____ ____                                                             #
 # | ____/ ___|___ \                                                            #
@@ -181,4 +180,76 @@ with OurStatus("Creating security groups"):
 #                                                                              #
 ################################################################################
 
+with OurStatus("Creating MariaDB instance"):
+    script_mariadb = """#!/bin/bash
+    sudo apt update && sudo apt upgrade -y
+    sudo apt install mariadb-server -y
+    sudo mysql -e "CREATE DATABASE dvwa;"
+    sudo mysql -e "CREATE USER 'dvwa'@'%' IDENTIFIED BY 'password_secure';"
+    sudo mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'dvwa'@'%';"
+    sudo mysql -e "FLUSH PRIVILEGES;"
+
+    sudo sed -i 's/bind-address/#&/' /etc/mysql/mariadb.conf.d/50-server.cnf
+    sudo systemctl restart mariadb.service
+    """
+    log.debug(script_mariadb)
+
+    EC2.download_key("mariadb")
+    mariadb = EC2.create_ubuntu_instance(
+        "MariaDB",
+        private_subnet_id,
+        [db_sg_id],
+        "mariadb",
+        script_mariadb
+    )
+    mariadb_priv_ip = mariadb["Instances"][0]["PrivateIpAddress"] # type: ignore
+    log.info("Created MariaDB instance.")
+    log.debug(mariadb)
+
+
+with OurStatus("Creating DVWA instance"):
+    script_dvwa = f"""#!/bin/bash
+    sudo apt update && sudo apt upgrade -y
+    sudo apt install apache2 mariadb-client php php-mysqli php-gd libapache2-mod-php git -y
+    cd /var/www/html && sudo git clone https://github.com/digininja/DVWA.git
+    sudo chown -R www-data:www-data /var/www/html/DVWA
+    sudo chmod -R 755 /var/www/html/DVWA
+    sudo cp /var/www/html/DVWA/config/config.inc.php.dist /var/www/html/DVWA/config/config.inc.php
+    sudo sed -i 's/127.0.0.1/{mariadb_priv_ip}/g' /var/www/html/DVWA/config/config.inc.php
+    sudo sed -i 's/p@ssw0rd/password_secure/g' /var/www/html/DVWA/config/config.inc.php
+    sudo sed -i 's/impossible/low/g' /var/www/html/DVWA/config/config.inc.php
+    sudo systemctl restart apache2
+    """
+    log.debug(script_dvwa)
+
+    EC2.download_key("dvwa")
+    dvwa = EC2.create_ubuntu_instance(
+        "DVWA",
+        public_subnet_id,
+        [web_sg_id],
+        "dvwa",
+        script_dvwa
+    )
+    log.info("Created DVWA instance.")
+    log.debug(dvwa)
+
+
+with OurStatus("Creating Snort instance"):
+    script_snort =  """#!/bin/bash
+    sudo apt update && sudo apt upgrade -y
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq oinkmaster snort snort-rules-default < /dev/null > /dev/null
+    echo "url = http://rules.emergingthreats.net/open-nogpl/snort-2.9.0/emerging.rules.tar.gz" | sudo tee -a /etc/oinkmaster.conf
+    sudo oinkmaster  -o /etc/snort/rules
+    sudo /etc/init.d/snort start
+    """
+    log.debug(script_snort)
+
+    EC2.download_key("snort")
+    snort = EC2.create_ubuntu_instance(
+        "Snort",
+        private_subnet_id,
+        [db_sg_id],
+        "snort",
+        script_snort
+    )
 
