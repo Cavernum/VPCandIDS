@@ -104,12 +104,13 @@ with OurStatus("Creating gateways"):
         "Name", "EIP",
         "Name", "Nat-GW"
     )
+    nat_gateway_id = nat_gateway['NatGateway']['NatGatewayId']    # type: ignore
     log.info("Created NAT gateway.")
     log.debug(nat_gateway)
 
 
 with OurStatus("Creating routes"):
-    public_route= routes.create_public_route(
+    public_route = routes.create_public_route(
         vpc_id,
         "0.0.0.0/0",
         internet_gateway["InternetGateway"]["InternetGatewayId"], # type: ignore
@@ -121,6 +122,7 @@ with OurStatus("Creating routes"):
     private_route = routes.create_private_route(
         vpc_id,
         "0.0.0.0/0",
+        nat_gateway_id,
         "Name", "Private-Route"
     )
     log.info("Created route 0.0.0.0/0 for private subnet.")
@@ -128,7 +130,6 @@ with OurStatus("Creating routes"):
 
 
 with OurStatus("Waiting for NAT Gateway to attach"):
-    nat_gateway_id = nat_gateway['NatGateway']['NatGatewayId']    # type: ignore
     waiter = ec2.get_waiter('nat_gateway_available')
 
     waiter.wait(

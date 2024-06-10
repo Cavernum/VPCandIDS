@@ -33,7 +33,7 @@ def create_public_route(vpc_id, dest_cidr, int_gw_id, tags_key, tags_value):
 
 
 
-def create_private_route(vpc_id, dest_cidr, tags_key, tags_value):
+def create_private_route(vpc_id, dest_cidr, nat_gw_id, tags_key, tags_value):
     tableRoutage = ec2.create_route_table(
         VpcId=vpc_id,
         TagSpecifications=[
@@ -47,6 +47,12 @@ def create_private_route(vpc_id, dest_cidr, tags_key, tags_value):
                 ]
             },
         ]
+    )
+    rt_id = tableRoutage["RouteTable"]["RouteTableId"]
+    ec2.create_route(
+        DestinationCidrBlock=dest_cidr,
+        GatewayId=nat_gw_id,
+        RouteTableId=rt_id,
     )
     return tableRoutage
 
