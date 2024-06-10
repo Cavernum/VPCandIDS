@@ -14,9 +14,14 @@ def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypa
         ec2.run_instances(
                 ImageId="ami-04b70fa74e45c3917", # ubuntu
                 InstanceType="t3.micro",
+                NetworkInterfaces=[
+                    {
+                        "AssociatePublicIpAddress": True,
+                        "DeviceIndex": 0,
+                        "SubnetId": subnet_id,
+                    }
+                ],
                 KeyName=keypair_name,
-                SecurityGroupIds=security_groups_ids,
-                SubnetId=subnet_id,
                 MinCount=1,
                 MaxCount=1,
                 DryRun=True
@@ -28,25 +33,43 @@ def create_ubuntu_instance(subnet_id: str, security_groups_ids: list[str], keypa
 
     instance = ec2.run_instances(
             ImageId="ami-04b70fa74e45c3917", # ubuntu
-            KeyName=keypair_name,
             InstanceType="t3.micro",
-            SecurityGroupIds=security_groups_ids,
-            SubnetId=subnet_id,
+            NetworkInterfaces=[
+                {
+                    "AssociatePublicIpAddress": True,
+                    "DeviceIndex": 0,
+                    "SubnetId": subnet_id,
+                }
+            ],
+            KeyName=keypair_name,
             MinCount=1,
             MaxCount=1,
             )
+
     return instance
 
-def install_apache(username, private_key, public_ip_address):
+def install_dvwa(username, private_key, public_ip_address, ip_db):
     time.sleep(1)
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
     ssh_client.connect(hostname=public_ip_address, username=username, pkey=private_key)
 
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt-get update")
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt-get upgrade -y")
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt-get install -y apache2")
+    commands = [
+        "sudo apt update",
+        "sudo apt install apache2 php php-mysql libapache2-mod-php git -y",
+        "cd /var/www/html && sudo git clone https://github.com/digininja/DVWA.git",
+        "sudo chown -R www-data:www-data /var/www/html/DVWA",
+        "sudo chmod -R 755 /var/www/html/DVWA",
+        "sudo cp /var/www/html/DVWA/config/config.inc.php.dist /var/www/html/DVWA/config/config.inc.php",
+        f"sudo sed -i 's/db_user = ''/db_user = 'dvwa_user'/g' /var/www/html/DVWA/config/config.inc.php",
+        f"sudo sed -i 's/db_password = ''/db_password = 'password_secure'/g' /var/www/html/DVWA/config/config.inc.php",
+        f"sudo sed -i 's/db_database = ''/db_database = 'dvwa'/g' /var/www/html/DVWA/config/config.inc.php",
+        f"sudo sed -i 's/db_server = ''/db_server = '{ip_db}'/g' /var/www/html/DVWA/config/config.inc.php",
+        "sudo systemctl restart apache2"
+    ]
+    for command in commands:
+        stdin, stdout, stderr = ssh_client.exec_command(command)
 
     ssh_client.close()
 
@@ -57,9 +80,16 @@ def install_mariadb(username, private_key, public_ip_address):
 
     ssh_client.connect(hostname=public_ip_address, username=username, pkey=private_key)
 
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt-get update")
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt-get upgrade -y")
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt-get install -y mariadb")
+    commands = [
+        "sudo apt update",
+        "sudo apt install mariadb-server -y",
+        "sudo mysql -e \"CREATE DATABASE dvwa;\"",
+        "sudo mysql -e \"CREATE USER 'dvwa_user'@'%' IDENTIFIED BY 'password_secure';\"",
+        "sudo mysql -e \"GRANT ALL PRIVILEGES ON dvwa.* TO 'dvwa_user'@'%';\"",
+        "sudo mysql -e \"FLUSH PRIVILEGES;\""
+    ]
+    for command in commands:
+        ssh_client.exec_command(command)
 
     ssh_client.close()
 
