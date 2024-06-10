@@ -27,7 +27,7 @@ sudo systemctl restart mariadb.service
 """
 
 # Create MariaDB instance without a public IP
-instance_mariadb = create_ubuntu_instance(subnet_id, security_groups_ids, keypair_name, script_mariadb, public_ip=False)
+instance_mariadb = create_ubuntu_instance("MariaDB", subnet_id, security_groups_ids, keypair_name, script_mariadb, public_ip=False)
 instance_id_mariadb = instance_mariadb["Instances"][0]["InstanceId"]
 instance_details_mariadb = ec2.describe_instances(InstanceIds=[instance_id_mariadb])["Reservations"][0]["Instances"][0]
 private_ip_address_mariadb = instance_details_mariadb["PrivateIpAddress"]
@@ -50,7 +50,7 @@ sudo systemctl restart apache2
 
 # Create DVWA instance with a public IP
 security_groups_ids_dvwa = ["sg-0ceb67ec6256f2242"]
-instance_dvwa = create_ubuntu_instance(subnet_id, security_groups_ids_dvwa, keypair_name, script_dvwa, public_ip=True)
+instance_dvwa = create_ubuntu_instance("DVWA", subnet_id, security_groups_ids_dvwa, keypair_name, script_dvwa, public_ip=True)
 instance_id_dvwa = instance_dvwa["Instances"][0]["InstanceId"]
 instance_details_dvwa = ec2.describe_instances(InstanceIds=[instance_id_dvwa])["Reservations"][0]["Instances"][0]
 public_ip_address_dvwa = instance_details_dvwa["PublicIpAddress"]
