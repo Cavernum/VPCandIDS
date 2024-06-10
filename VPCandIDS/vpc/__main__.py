@@ -125,7 +125,7 @@ print("Associate Private Subnet 1 to Private Route table Response")
 print(association_private_subnet_routage, "\n")
 
 #NACLS
-nacl = acls.create_and_configure_nacl(ec2,vpc_id, public_subnet_id, private_subnet_id,'us-east-1')
+nacl = acls.create_and_configure_nacl(vpc_id, public_subnet_id, private_subnet_id,'us-east-1')
 print(nacl)
 
 #Groupes de sécurité

@@ -26,8 +26,8 @@ def create_public_route(vpc_id, dest_cidr, int_gw_id, tags_key, tags_value):
         RouteTableId=rt_id,
     )
 
-    print("Create Public Route to Internet Gateway Responce")
-    print(response_route, "\n")
+    # print("Create Public Route to Internet Gateway Responce")
+    # print(response_route, "\n")
 
     return tableRoutage
 

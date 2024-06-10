@@ -1,11 +1,14 @@
 import boto3
 
-def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subnet_id, region='votre-region'):
+ec2 = boto3.client("ec2")
+
+# TODO: Split to two function calls
+def create_and_configure_nacl(vpc_id, public_subnet_id, private_subnet_id):
     
-    nacl_response = ec2_client.create_network_acl(VpcId=vpc_id)
+    nacl_response = ec2.create_network_acl(VpcId=vpc_id)
     nacl_id = nacl_response['NetworkAcl']['NetworkAclId']
 
-    current_associations = ec2_client.describe_network_acls(
+    current_associations = ec2.describe_network_acls(
         Filters=[
             {'Name': 'association.subnet-id', 'Values': [public_subnet_id, private_subnet_id]}
         ]
@@ -13,14 +16,14 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
     
     for association in current_associations['NetworkAcls'][0]['Associations']:
         if association['SubnetId'] == public_subnet_id:
-            ec2_client.replace_network_acl_association(
+            ec2.replace_network_acl_association(
                 AssociationId=association['NetworkAclAssociationId'],
                 NetworkAclId=nacl_id
             )
     
     for association in current_associations['NetworkAcls'][0]['Associations']:
         if association['SubnetId'] == private_subnet_id:
-            ec2_client.replace_network_acl_association(
+            ec2.replace_network_acl_association(
                 AssociationId=association['NetworkAclAssociationId'],
                 NetworkAclId=nacl_id
             )
@@ -43,7 +46,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
     """
     
 # Créer les règles pour le sous-réseau public (Serveur Web)
-    ec2_client.create_network_acl_entry(
+    ec2.create_network_acl_entry(
         NetworkAclId=nacl_id,
         RuleNumber=100,
         Protocol='-1',  # All
@@ -52,7 +55,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
         CidrBlock='0.0.0.0/0',
         PortRange={'From': 0, 'To': 65535}
     )
-    ec2_client.create_network_acl_entry(
+    ec2.create_network_acl_entry(
         NetworkAclId=nacl_id,
         RuleNumber=100,
         Protocol='-1',  # All
@@ -81,7 +84,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
     # )
 
 # Créer les règles pour le sous-réseau privé (Serveur MariaDB)
-    ec2_client.create_network_acl_entry(
+    ec2.create_network_acl_entry(
         NetworkAclId=nacl_id,
         RuleNumber=200,
         Protocol='-1',
@@ -90,7 +93,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
         CidrBlock='10.0.0.0/16',
         PortRange={'From': 0, 'To': 65535}
     )
-    ec2_client.create_network_acl_entry(
+    ec2.create_network_acl_entry(
         NetworkAclId=nacl_id,
         RuleNumber=200,
         Protocol='-1',
