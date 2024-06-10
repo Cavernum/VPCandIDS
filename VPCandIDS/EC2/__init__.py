@@ -101,17 +101,24 @@ def install_snort(username, private_key, public_ip_address):
 
     ssh_client.connect(hostname=public_ip_address, username=username, pkey=private_key)
 
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt update && sudo apt upgrade -y")
-    stdin, stdout, stderr = ssh_client.exec_command("sudo apt install -y build-essential autotools-dev libdumbnet-dev libpcap-dev libpcre3-dev libdnet autoconf bison flex libtool")
-    stdin, stdout, stderr = ssh_client.exec_command("wget https://www.snort.org/downloads/snort/daq-2.0.7.tar.gz")
-    stdin, stdout, stderr = ssh_client.exec_command("tar -xzvf daq-2.0.7.tar.gz")
-    stdin, stdout, stderr = ssh_client.exec_command("cd daq-2.0.7")
-    stdin, stdout, stderr = ssh_client.exec_command("./configure && make && sudo make install")
-    stdin, stdout, stderr = ssh_client.exec_command("cd ..")
-    stdin, stdout, stderr = ssh_client.exec_command("wget https://www.snort.org/downloads/snort/snort-2.9.15.1.tar.gz")
-    stdin, stdout, stderr = ssh_client.exec_command("tar -xzvf snort-2.9.15.1.tar.gz")
-    stdin, stdout, stderr = ssh_client.exec_command("cd snort-2.9.15.1")
-    stdin, stdout, stderr = ssh_client.exec_command("./configure --enable-sourcefire && make && sudo make install")
+    commands = [
+        "sudo apt update && sudo apt upgrade -y",
+        "sudo apt install -y build-essential autotools-dev libdumbnet-dev libpcap-dev libpcre3-dev libdnet autoconf bison flex libtool",
+        "wget https://www.snort.org/downloads/snort/daq-2.0.7.tar.gz",
+        "tar -xzvf daq-2.0.7.tar.gz",
+        "cd daq-2.0.7",
+        "./configure && make && sudo make install",
+        "cd ..",
+        "wget https://www.snort.org/downloads/snort/snort-2.9.15.1.tar.gz",
+        "tar -xzvf snort-2.9.15.1.tar.gz",
+        "cd snort-2.9.15.1",
+        "./configure --enable-sourcefire && make && sudo make install"
+    ]   
+    for command in commands:
+        ssh_client.exec_command(command)
+
+    ssh_client.close()
+
 
 def download_key(instance):
     ec2=instance
