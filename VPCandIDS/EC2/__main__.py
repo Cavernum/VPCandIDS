@@ -31,10 +31,6 @@ instance_id = instance["Instances"][0]["InstanceId"]                            
 instance = ec2.describe_instances(InstanceIds=[instance_id])["Reservations"][0]["Instances"][0]   # type: ignore
 public_ip_address = instance["PublicIpAddress"]                                                   # type: ignore
 
-ssh_username = "ubuntu"
-ssh_key_file = "mateo.pem"
-private_key = paramiko.RSAKey.from_private_key_file(ssh_key_file)
-
 #install_mariadb(ssh_username, private_key, public_ip_address)
 
 
