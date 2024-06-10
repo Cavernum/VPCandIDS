@@ -26,6 +26,7 @@ def create_nat_gateway(subnet_id, tags_key_ip, tags_value_ip, tags_key_nat, tags
     response_nat = ec2.create_nat_gateway(
         AllocationId=eip_id,
         SubnetId= subnet_id,
+        ConnectivityType="public",
         TagSpecifications=[
             {
                 'ResourceType': 'natgateway',

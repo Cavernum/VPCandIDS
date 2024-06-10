@@ -46,7 +46,7 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
     ec2_client.create_network_acl_entry(
         NetworkAclId=nacl_id,
         RuleNumber=100,
-        Protocol='6',  # TCP
+        Protocol='-1',  # All
         RuleAction='allow',
         Egress=False,
         CidrBlock='0.0.0.0/0',
@@ -54,41 +54,59 @@ def create_and_configure_nacl(ec2_client,vpc_id, public_subnet_id, private_subne
     )
     ec2_client.create_network_acl_entry(
         NetworkAclId=nacl_id,
-        RuleNumber=110,
-        Protocol='6',
-        RuleAction='allow',
-        Egress=False,
-        CidrBlock='0.0.0.0/0',
-        PortRange={'From': 0, 'To': 65535}
-    )
-    ec2_client.create_network_acl_entry(
-        NetworkAclId=nacl_id,
-        RuleNumber=120,
-        Protocol='6',
+        RuleNumber=100,
+        Protocol='-1',  # All
         RuleAction='allow',
         Egress=True,
-        CidrBlock='10.0.2.0/24',
+        CidrBlock='0.0.0.0/0',
         PortRange={'From': 0, 'To': 65535}
     )
+    # ec2_client.create_network_acl_entry(
+    #     NetworkAclId=nacl_id,
+    #     RuleNumber=110,
+    #     Protocol='4',
+    #     RuleAction='allow',
+    #     Egress=False,
+    #     CidrBlock='0.0.0.0/0',
+    #     PortRange={'From': 0, 'To': 65535}
+    # )
+    # ec2_client.create_network_acl_entry(
+    #     NetworkAclId=nacl_id,
+    #     RuleNumber=120,
+    #     Protocol='4',
+    #     RuleAction='allow',
+    #     Egress=True,
+    #     CidrBlock='10.0.2.0/24',
+    #     PortRange={'From': 0, 'To': 65535}
+    # )
 
 # Créer les règles pour le sous-réseau privé (Serveur MariaDB)
     ec2_client.create_network_acl_entry(
         NetworkAclId=nacl_id,
         RuleNumber=200,
-        Protocol='6',
+        Protocol='-1',
         RuleAction='allow',
         Egress=False,
-        CidrBlock='10.0.1.0/24',
+        CidrBlock='10.0.0.0/16',
         PortRange={'From': 0, 'To': 65535}
     )
     ec2_client.create_network_acl_entry(
         NetworkAclId=nacl_id,
-        RuleNumber=210,
-        Protocol='6',
+        RuleNumber=200,
+        Protocol='-1',
         RuleAction='allow',
         Egress=True,
-        CidrBlock='10.0.1.0/24',
+        CidrBlock='10.0.0.0/16',
         PortRange={'From': 0, 'To': 65535}
     )
+    # ec2_client.create_network_acl_entry(
+    #     NetworkAclId=nacl_id,
+    #     RuleNumber=210,
+    #     Protocol='4',
+    #     RuleAction='allow',
+    #     Egress=True,
+    #     CidrBlock='10.0.1.0/24',
+    #     PortRange={'From': 0, 'To': 65535}
+    # )
     
     return nacl_id
