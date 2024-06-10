@@ -1,6 +1,5 @@
 import logging
 import boto3
-import paramiko
 
 from . import create_ubuntu_instance
 
