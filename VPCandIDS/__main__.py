@@ -242,7 +242,10 @@ with OurStatus("Creating Snort instance"):
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq oinkmaster snort snort-rules-default < /dev/null > /dev/null
     echo "url = http://rules.emergingthreats.net/open-nogpl/snort-2.9.0/emerging.rules.tar.gz" | sudo tee -a /etc/oinkmaster.conf
     sudo oinkmaster  -o /etc/snort/rules
-    sudo /etc/init.d/snort start
+
+    echo '$RULEPATH/community-sql-injection.rules' | sudo tee -a /etc/snort/snort.conf
+    echo '$RULEPATH/emerging-sql.rules' | sudo tee -a /etc/snort/snort.conf
+    echo '$RULEPATH/mysql.rules' | sudo tee -a /etc/snort/snort.conf
     """
     log.debug(script_snort)
 
