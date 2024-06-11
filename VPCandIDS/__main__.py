@@ -243,9 +243,9 @@ with OurStatus("Creating Snort instance"):
     echo "url = http://rules.emergingthreats.net/open-nogpl/snort-2.9.0/emerging.rules.tar.gz" | sudo tee -a /etc/oinkmaster.conf
     sudo oinkmaster  -o /etc/snort/rules
 
-    echo '$RULEPATH/community-sql-injection.rules' | sudo tee -a /etc/snort/snort.conf
-    echo '$RULEPATH/emerging-sql.rules' | sudo tee -a /etc/snort/snort.conf
-    echo '$RULEPATH/mysql.rules' | sudo tee -a /etc/snort/snort.conf
+    echo 'include $RULE_PATH/community-sql-injection.rules' | sudo tee -a /etc/snort/snort.conf
+    echo 'include $RULE_PATH/emerging-sql.rules' | sudo tee -a /etc/snort/snort.conf
+    echo 'include $RULE_PATH/mysql.rules' | sudo tee -a /etc/snort/snort.conf
     """
     log.debug(script_snort)
 
